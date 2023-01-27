@@ -1,3 +1,6 @@
 # STFoundation
 
-A description of this package.
+A framework which contains all necessary for my personal projects
+
+- [X] CoreData Loader
+
