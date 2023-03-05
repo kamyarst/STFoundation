@@ -13,12 +13,12 @@ import Foundation
 
 public final class CoreDataStack {
 
-    private(set) var configurations: CoreDataConfigurationProtocol
-    private(set) var persistentContainer: NSPersistentContainer
+    private(set) var configs: CoreDataConfigurationProtocol
+    public lazy var persistentContainer = createContainer()
 
     public var hasCloudKit: Bool { FileManager.default.ubiquityIdentityToken != nil }
 
-    private var iCloudAvailable: Bool { self.hasCloudKit && self.configurations.iCloud }
+    private var iCloudAvailable: Bool { self.hasCloudKit && self.configs.iCloud }
 
     public lazy var mainQueueContext: NSManagedObjectContext = self.persistentContainer.viewContext
 
@@ -27,29 +27,67 @@ public final class CoreDataStack {
         context.automaticallyMergesChangesFromParent = true
         return context
     }
+    
+    public lazy var privateStoreDescription: NSPersistentStoreDescription = {
+        let privateStoreURL = URL.storeURL(for: self.configs.appGroupBundle,
+                                           databaseName: self.configs.containerName)
+        let privateDescription = NSPersistentStoreDescription(url: privateStoreURL)
+        
+        if self.configs.iCloud {
+            privateDescription
+                .cloudKitContainerOptions =
+            NSPersistentCloudKitContainerOptions(containerIdentifier: self.configs.cloudKitBundle)
+        } else {
+            privateDescription.cloudKitContainerOptions = nil
+        }
+        
+        privateDescription.setOption(true as NSNumber,
+                                     forKey: NSPersistentHistoryTrackingKey)
+        privateDescription.setOption(true as NSNumber,
+                                     forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+
+        return privateDescription
+    }()
+    
+    public lazy var sharedStoreDescription: NSPersistentStoreDescription = {
+        let sharedStoreURL = URL.storeURL(for: self.configs.appGroupBundle,
+                                          databaseName: self.configs.containerName + ".shared")
+        let sharedDescription = privateStoreDescription.copy() as! NSPersistentStoreDescription
+        sharedDescription.url = sharedStoreURL
+        let sharedStoreOptions =
+        NSPersistentCloudKitContainerOptions(containerIdentifier: self.configs.cloudKitBundle)
+        sharedStoreOptions.databaseScope = .shared
+        sharedDescription.cloudKitContainerOptions = sharedStoreOptions
+        return sharedDescription
+    }()
+    
+    public var sharedStore: NSPersistentStore? {
+        let sharedStoreURL = URL.storeURL(for: self.configs.appGroupBundle,
+                                          databaseName: self.configs.containerName + ".shared")
+       return persistentContainer.persistentStoreCoordinator.persistentStore(for: sharedStoreURL)
+        
+    }
 
     // MARK: - Core Data stack
 
     private(set) lazy var managedObjectModel: NSManagedObjectModel = {
         let coreBundle = Bundle(for: CoreDataStack.self)
-        guard let modelURL = coreBundle.url(forResource: self.configurations.containerName,
+        guard let modelURL = coreBundle.url(forResource: self.configs.containerName,
                                             withExtension: "momd"),
             let model = NSManagedObjectModel(contentsOf: modelURL)
         else { fatalError() }
         return model
     }()
 
-    private init(container: NSPersistentContainer,
-                 _ config: CoreDataConfigurationProtocol) {
-        self.configurations = config
-        self.persistentContainer = container
+    public init(_ configs: CoreDataConfigurationProtocol) {
+        self.configs = configs
     }
 
     public func reInitiateContainer() {
 
         var option = self.persistentContainer.persistentStoreDescriptions.first?.cloudKitContainerOptions
         if self.iCloudAvailable {
-            option = NSPersistentCloudKitContainerOptions(containerIdentifier: self.configurations.cloudKitBundle)
+            option = NSPersistentCloudKitContainerOptions(containerIdentifier: self.configs.cloudKitBundle)
         } else {
             option = nil
         }
@@ -78,22 +116,22 @@ public final class CoreDataStack {
 
     public func deleteCloudKit(_ completion: @escaping () -> Void) {
 
-        let container = CKContainer(identifier: self.configurations.cloudKitBundle)
+        let container = CKContainer(identifier: self.configs.cloudKitBundle)
         let database = container.privateCloudDatabase
         database.delete(withRecordZoneID: .init(zoneName: "com.apple.coredata.cloudkit.zone"),
                         completionHandler: { _, error in
                             if let error {
-                                STLog(.error, #function, "Remove CloudKit", error.localizedDescription)
+                                log(.error, "Remove CloudKit", error.localizedDescription)
                             }
-                            STLog(.info, #function, "Remove CloudKit", "CloudKit successfully removed")
+                            log(.info, "Remove CloudKit", "CloudKit successfully removed")
                             self.resetAllCoreData()
                             completion()
                         })
     }
 
-    func resetAllCoreData() {
+    public func resetAllCoreData() {
 
-        let entityNames = self.persistentContainer.managedObjectModel.entities.compactMap { $0.name! }
+        let entityNames = self.persistentContainer.managedObjectModel.entities.compactMap { $0.name }
         entityNames.forEach { [weak self] entityName in
             guard let self else { return }
             let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
@@ -103,43 +141,38 @@ public final class CoreDataStack {
                 try self.mainQueueContext.execute(deleteRequest)
                 try self.mainQueueContext.save()
             } catch {
-                STLog(.error, #function, "Remove CoreData", error.localizedDescription)
+                log(.error, "Remove CoreData", error.localizedDescription)
             }
         }
     }
-}
 
-private func createContainer(for managesObjectModel: NSManagedObjectModel,
-                             configs: CoreDataConfigurationProtocol) -> NSPersistentContainer {
-    let container = NSPersistentCloudKitContainer(name: configs.containerName,
-                                                  managedObjectModel: managesObjectModel)
+    private func createContainer() -> NSPersistentContainer {
 
-    let storeURL = URL.storeURL(for: configs.appGroupBundle, databaseName: configs.containerName)
-    let description = NSPersistentStoreDescription(url: storeURL)
+        let container = NSPersistentCloudKitContainer(name: configs.containerName,
+                                                      managedObjectModel: self.managedObjectModel)
 
-    if configs.iCloud {
-        description
-            .cloudKitContainerOptions =
-            NSPersistentCloudKitContainerOptions(containerIdentifier: configs.cloudKitBundle)
-    } else {
-        description.cloudKitContainerOptions = nil
+        container.persistentStoreDescriptions = [privateStoreDescription, sharedStoreDescription]
+
+        container.loadPersistentStores(completionHandler: { value, error in
+            if let error = error as NSError? {
+                fatalError("Unresolved error \(error), \(error.userInfo)")
+            }
+        })
+        
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+
+        return container
     }
-
-    description.setOption(true as NSNumber,
-                          forKey: NSPersistentHistoryTrackingKey)
-
-    description.setOption(true as NSNumber,
-                          forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
-    container.persistentStoreDescriptions = [description]
-
-    container.loadPersistentStores(completionHandler: { _, error in
-        if let error = error as NSError? {
-            fatalError("Unresolved error \(error), \(error.userInfo)")
-        }
-    })
-
-    container.viewContext.automaticallyMergesChangesFromParent = true
-    container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
-
-    return container
 }
+
+// import UIKit
+//
+// @UIApplicationMain
+// class AppDelegate: UIResponder, UIApplicationDelegate {
+//
+//    func application(_ application: UIApplication, userDidAcceptCloudKitShareWith cloudKitShareMetadata:
+//    CKShare.Metadata) {
+//
+//    }
+// }
