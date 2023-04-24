@@ -15,7 +15,7 @@ protocol LoaderProtocol {
     func get(predicate: Query?) async throws -> Entity
     @discardableResult
     func list(predicate: Query?) async throws -> [Entity]
-    func insert(_ item: Entity) async throws
+    func insert(_ item: [Entity]) async throws
     func update(_ item: Entity) async throws
     func delete(_ item: Entity) async throws
 }

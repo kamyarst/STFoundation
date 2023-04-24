@@ -57,9 +57,9 @@ public enum STConstant {
     /// 3
     static let maxBorderWidth: CGFloat = 3
     /// Screen Width
-    static let screenWidth: CGFloat = UIScreen.main.bounds.width
+    public static let screenWidth: CGFloat = UIScreen.main.bounds.width
     /// Screen Height
-    static let screenHeight: CGFloat = UIScreen.main.bounds.height
+    public  static let screenHeight: CGFloat = UIScreen.main.bounds.height
     /// Status Bar Size
     static let statusBarSize: CGRect = {
         let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })

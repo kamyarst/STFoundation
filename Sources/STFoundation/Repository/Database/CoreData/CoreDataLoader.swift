@@ -21,7 +21,6 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
     }
 
     public func get(predicate: NSPredicate?) async throws -> Entity {
-
         self.fetchRequest.fetchLimit = 1
         guard let data = try await self.list(predicate: predicate).first else {
             log(.error, "Core Data", CoreDataError.notExist.localizedDescription)
@@ -33,49 +32,51 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
     }
 
     public func list(predicate: NSPredicate?) async throws -> [Entity] {
-
         do {
             self.fetchRequest.predicate = predicate
             let entities = try self.context.fetch(self.fetchRequest)
-            log(.info, "Core Data", "\(entities)")
+//            log(
+//                .info,
+//                "Core Data - Get",
+//                entities.compactMap { "\($0.prettyPrint())" }.joined(separator: "\n"))
             return entities
         } catch {
-            log(.error, "Core Data", error.localizedDescription)
+            log(.error, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
 
-    public func insert(_ item: Entity) async throws {
-
-        self.context.insert(item)
+    public func insert(_ items: [Entity]) async throws {
+        items.lazy.forEach { self.context.insert($0) }
         do {
             try self.context.saveIfNeeded()
-            log(.info, "Core Data", "\(item)")
+            log(
+                .info,
+                "Core Data - Insert",
+                items.compactMap { "\($0.prettyPrint())" }.joined(separator: "\n"))
         } catch {
-            log(.error, "Core Data", error.localizedDescription)
+            log(.error, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
 
     public func update(_ item: Entity) async throws {
-
         do {
             try self.context.saveIfNeeded()
-            log(.info, "Core Data", "\(item)")
+            log(.info, "Core Data - Update", item.prettyPrint())
         } catch {
-            log(.error, "Core Data", error.localizedDescription)
+            log(.error, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
 
     public func delete(_ item: Entity) async throws {
-
         self.context.delete(item)
         do {
             try self.context.saveIfNeeded()
-            log(.info, "Core Data", "\(item)")
+            log(.info, "Core Data - Delete", item.prettyPrint())
         } catch {
-            log(.error, "Core Data", error.localizedDescription)
+            log(.error, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
