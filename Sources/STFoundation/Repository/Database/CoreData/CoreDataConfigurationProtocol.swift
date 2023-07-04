@@ -1,6 +1,6 @@
 //
 //  CoreDataConfigurationProtocol.swift
-//  
+//
 //
 //  Created by Kamyar on 27/01/2023.
 //

@@ -7,9 +7,9 @@
 
 import CoreData
 
-extension NSManagedObject {
+public extension NSManagedObject {
 
-    public func prettyPrint() -> [String: Any] {
+    func prettyPrint() -> [String: Any] {
         let entity = self.entity
         let properties = entity.propertiesByName
 

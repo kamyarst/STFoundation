@@ -1,6 +1,4 @@
-import XCTest
 @testable import STFoundation
+import XCTest
 
-final class CoreDataLoaderTests: XCTestCase {
-
-}
+final class CoreDataLoaderTests: XCTestCase { }

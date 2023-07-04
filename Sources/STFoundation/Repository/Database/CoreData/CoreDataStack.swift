@@ -29,9 +29,8 @@ public final class CoreDataStack {
     }
 
     public lazy var privateStoreDescription: NSPersistentStoreDescription = {
-        let privateStoreURL = URL.storeURL(
-            for: self.configs.appGroupBundle,
-            databaseName: self.configs.containerName)
+        let privateStoreURL = URL.storeURL(for: self.configs.appGroupBundle,
+                                           databaseName: self.configs.containerName)
         let privateDescription = NSPersistentStoreDescription(url: privateStoreURL)
 
         if self.configs.iCloud {
@@ -42,20 +41,17 @@ public final class CoreDataStack {
             privateDescription.cloudKitContainerOptions = nil
         }
 
-        privateDescription.setOption(
-            true as NSNumber,
-            forKey: NSPersistentHistoryTrackingKey)
-        privateDescription.setOption(
-            true as NSNumber,
-            forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        privateDescription.setOption(true as NSNumber,
+                                     forKey: NSPersistentHistoryTrackingKey)
+        privateDescription.setOption(true as NSNumber,
+                                     forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
         return privateDescription
     }()
 
     public lazy var sharedStoreDescription: NSPersistentStoreDescription = {
-        let sharedStoreURL = URL.storeURL(
-            for: self.configs.appGroupBundle,
-            databaseName: self.configs.containerName + ".shared")
+        let sharedStoreURL = URL.storeURL(for: self.configs.appGroupBundle,
+                                          databaseName: self.configs.containerName + ".shared")
         guard let sharedDescription = self.privateStoreDescription.copy() as? NSPersistentStoreDescription
         else { fatalError() }
         sharedDescription.url = sharedStoreURL
@@ -67,9 +63,8 @@ public final class CoreDataStack {
     }()
 
     public var sharedStore: NSPersistentStore? {
-        let sharedStoreURL = URL.storeURL(
-            for: self.configs.appGroupBundle,
-            databaseName: self.configs.containerName + ".shared")
+        let sharedStoreURL = URL.storeURL(for: self.configs.appGroupBundle,
+                                          databaseName: self.configs.containerName + ".shared")
         return self.persistentContainer.persistentStoreCoordinator.persistentStore(for: sharedStoreURL)
     }
 
@@ -77,9 +72,8 @@ public final class CoreDataStack {
 
     private(set) lazy var managedObjectModel: NSManagedObjectModel = {
         let coreBundle = Bundle(for: CoreDataStack.self)
-        guard let modelURL = coreBundle.url(
-            forResource: self.configs.containerName,
-            withExtension: "momd"),
+        guard let modelURL = coreBundle.url(forResource: self.configs.containerName,
+                                            withExtension: "momd"),
             let model = NSManagedObjectModel(contentsOf: modelURL)
         else { fatalError() }
         return model
@@ -112,19 +106,26 @@ public final class CoreDataStack {
         }
     }
 
-    public func deleteCloudKit() async {
+    public func deleteCloudKit() async throws {
         let container = CKContainer(identifier: self.configs.cloudKitBundle)
         let database = container.privateCloudDatabase
-        let zone = CKRecordZone.ID(zoneName: "com.apple.coredata.cloudkit.zone")
-        do {
-            try await database.deleteRecordZone(withID: zone)
-            log(.info, "Remove CloudKit", "CloudKit successfully removed")
-        } catch {
-            log(.error, "Remove CloudKit", error.localizedDescription)
+
+        let zones = try await database.allRecordZones()
+        for zone in zones {
+            try await database.deleteRecordZone(withID: zone.zoneID)
+            log(.info, "CloudKit Zone with id \(zone.zoneID) is removed")
         }
+        log(.info, "Remove CloudKit", "CloudKit successfully removed")
+
+//        let zone = CKRecordZone.ID(zoneName: "com.apple.coredata.cloudkit.zone")
+//        do {
+//            try await database.deleteRecordZone(withID: zone)
+//        } catch {
+//            log(.error, "Remove CloudKit", error.localizedDescription)
+//        }
     }
 
-    public func deleteCoreData() async {
+    public func deleteCoreData() async throws {
         let entityNames = self.persistentContainer.managedObjectModel.entities.compactMap { $0.name }
         entityNames.forEach { [weak self] entityName in
             guard let self else { return }
@@ -141,9 +142,8 @@ public final class CoreDataStack {
     }
 
     private func createContainer() -> NSPersistentContainer {
-        let container = NSPersistentCloudKitContainer(
-            name: configs.containerName,
-            managedObjectModel: self.managedObjectModel)
+        let container = NSPersistentCloudKitContainer(name: configs.containerName,
+                                                      managedObjectModel: self.managedObjectModel)
 
         container.persistentStoreDescriptions = [self.privateStoreDescription, self.sharedStoreDescription]
 
@@ -167,25 +167,22 @@ extension CoreDataStack {
             if persistentStore == self.sharedStore {
                 isShared = true
             } else {
-                if #available(iOS 15.0, *) {
-                    let container = persistentContainer
-                    do {
-                        let shares = try (container as? NSPersistentCloudKitContainer)?
-                            .fetchShares(matching: [objectID])
+                let container = self.persistentContainer
+                do {
+                    let shares = try (container as? NSPersistentCloudKitContainer)?
+                        .fetchShares(matching: [objectID])
 
-                        if shares?.first != nil {
-                            isShared = true
-                        }
-                    } catch {
-                        print("Failed to fetch share for \(objectID): \(error)")
+                    if shares?.first != nil {
+                        isShared = true
                     }
+                } catch {
+                    print("Failed to fetch share for \(objectID): \(error)")
                 }
             }
         }
         return isShared
     }
 
-    @available(iOS 15.0, *)
     func isOwner(object: NSManagedObject) -> Bool {
         guard self.isShared(objectID: object.objectID) else { return false }
         let container = self.persistentContainer

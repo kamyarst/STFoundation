@@ -50,8 +50,7 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
         items.lazy.forEach { self.context.insert($0) }
         do {
             try self.context.saveIfNeeded()
-            log(
-                .info,
+            log(.info,
                 "Core Data - Insert",
                 items.compactMap { "\($0.prettyPrint())" }.joined(separator: "\n"))
         } catch {

@@ -9,15 +9,15 @@ import Foundation
 
 public func log(_ type: LogType, _ items: Any..., separator: String? = nil,
                 file: String = #file, line: Int = #line, function: String = #function) {
-    #if DEBUG
-        LogManager().log(items,
-                         emoji: type.emoji,
-                         separator: separator ?? type.separator,
-                         bullet: type.bullet,
-                         file: file,
-                         function: function,
-                         line: line)
-    #endif
+//    #if DEBUG
+    LogManager().log(items,
+                     emoji: type.emoji,
+                     separator: separator ?? type.separator,
+                     bullet: type.bullet,
+                     file: file,
+                     function: function,
+                     line: line)
+//    #endif
 }
 
 // MARK: - LogManager
