@@ -5,11 +5,11 @@
 //  Created by Kamyar Sehati on 02/04/2023.
 //
 
-import CloudKit
 import Combine
-import CoreData
 import Network
 import SwiftUI
+import CloudKit
+import CoreData
 
 /// An object, usually used as a singleton, that provides, and publishes, the current state of
 /// `NSPersistentCloudKitContainer`'s sync
