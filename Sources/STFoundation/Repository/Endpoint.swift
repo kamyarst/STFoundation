@@ -11,23 +11,19 @@ import Foundation
 
 public protocol Endpoint {
     var scheme: String { get }
-    var host: String { get }
     var path: String { get }
     var method: HTTPMethod { get }
     var queryItems: [URLQueryItem]? { get }
     var headers: [String: String]? { get }
     var body: Data? { get }
-    var request: URLRequest { get }
+
+    func request(host: String) -> URLRequest
 }
 
 extension Endpoint {
 
-    public var request: URLRequest {
-        self.convertToRequest()
-    }
-
-    private func convertToRequest() -> URLRequest {
-        let url = self.convertToURL()
+    public func request(host: String) -> URLRequest {
+        let url = self.convertToURL(host: host)
         var request = URLRequest(url: url)
         request.httpMethod = self.method.name
         request.allHTTPHeaderFields = self.headers
@@ -36,10 +32,10 @@ extension Endpoint {
         return request
     }
 
-    private func convertToURL() -> URL {
+    private func convertToURL(host: String) -> URL {
         var components = URLComponents()
         components.scheme = self.scheme
-        components.host = self.host
+        components.host = host
         components.path = self.path
         components.queryItems = self.queryItems
 

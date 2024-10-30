@@ -23,7 +23,7 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
     public func get(predicate: NSPredicate?) async throws -> Entity {
         self.fetchRequest.fetchLimit = 1
         guard let data = try await self.list(predicate: predicate).first else {
-            log(.error, "Core Data", CoreDataError.notExist.localizedDescription)
+            log(.error, .database, "Core Data", CoreDataError.notExist.localizedDescription)
             self.fetchRequest.fetchLimit = .zero
             throw CoreDataError.operateFailed
         }
@@ -41,7 +41,7 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
 //                entities.compactMap { "\($0.prettyPrint())" }.joined(separator: "\n"))
             return entities
         } catch {
-            log(.error, "Core Data", error, error.localizedDescription)
+            log(.error, .database, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
@@ -51,10 +51,11 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
         do {
             try self.context.saveIfNeeded()
             log(.info,
+                .database,
                 "Core Data - Insert",
                 items.compactMap { "\($0.prettyPrint())" }.joined(separator: "\n"))
         } catch {
-            log(.error, "Core Data", error, error.localizedDescription)
+            log(.error, .database, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
@@ -62,9 +63,9 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
     public func update(_ item: Entity) async throws {
         do {
             try self.context.saveIfNeeded()
-            log(.info, "Core Data - Update", item.prettyPrint())
+            log(.info, .database, "Core Data - Update", item.prettyPrint())
         } catch {
-            log(.error, "Core Data", error, error.localizedDescription)
+            log(.error, .database, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }
@@ -73,9 +74,9 @@ public final class CoreDataLoader<T: NSManagedObject>: LoaderProtocol {
         self.context.delete(item)
         do {
             try self.context.saveIfNeeded()
-            log(.info, "Core Data - Delete", item.prettyPrint())
+            log(.info, .database, "Core Data - Delete", item.prettyPrint())
         } catch {
-            log(.error, "Core Data", error, error.localizedDescription)
+            log(.error, .database, "Core Data", error, error.localizedDescription)
             throw CoreDataError.operateFailed
         }
     }

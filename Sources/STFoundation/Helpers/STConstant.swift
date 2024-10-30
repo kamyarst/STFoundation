@@ -33,20 +33,13 @@ public enum STConstant {
     }
 
     public enum ControlHeight {
+        /// 52
+        public static let big: CGFloat = 52
         /// 48
-        public static let big: CGFloat = 48
+        public static let standard: CGFloat = 48
         /// 44
-        public static let standard: CGFloat = 44
-        /// 40
-        public static let small: CGFloat = 40
+        public static let small: CGFloat = 44
     }
-
-    /// screenWidth * 0.8
-    static let maxButtonWidth: CGFloat = screenWidth * 0.8
-    /// screenWidth * 0.65
-    static let standardButtonWidth: CGFloat = screenWidth * 0.65
-    /// screenWidth * 0.5
-    static let minButtonWidth: CGFloat = screenWidth * 0.5
 
     /// 24*24
     static let barButtonItem = CGSize(width: 24, height: 24)
@@ -56,14 +49,23 @@ public enum STConstant {
     static let standardBorderWidth: CGFloat = 2
     /// 3
     static let maxBorderWidth: CGFloat = 3
-    /// Screen Width
-    public static let screenWidth: CGFloat = UIScreen.main.bounds.width
-    /// Screen Height
-    public static let screenHeight: CGFloat = UIScreen.main.bounds.height
-    /// Status Bar Size
-    static let statusBarSize: CGRect = {
-        let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
-        return window?.windowScene?.statusBarManager?.statusBarFrame
-            ?? CGRect(x: 0, y: 0, width: screenWidth, height: 20)
-    }()
+    #if canImport(UIKit)
+        /// screenWidth * 0.8
+        static let maxButtonWidth: CGFloat = screenWidth * 0.8
+        /// screenWidth * 0.65
+        static let standardButtonWidth: CGFloat = screenWidth * 0.65
+        /// screenWidth * 0.5
+        static let minButtonWidth: CGFloat = screenWidth * 0.5
+
+        /// Screen Width
+        public static let screenWidth: CGFloat = UIScreen.main.bounds.width
+        /// Screen Height
+        public static let screenHeight: CGFloat = UIScreen.main.bounds.height
+        /// Status Bar Size
+        static let statusBarSize: CGRect = {
+            let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow })
+            return window?.windowScene?.statusBarManager?.statusBarFrame
+                ?? CGRect(x: 0, y: 0, width: screenWidth, height: 20)
+        }()
+    #endif
 }

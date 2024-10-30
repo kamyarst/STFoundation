@@ -101,7 +101,7 @@ public final class CoreDataStack {
             let records = try await db.perform(query, inZoneWith: nil)
             return records.isEmpty ? nil : true
         } catch {
-            log(.error, "Failed to get remote data", error.localizedDescription)
+            log(.error, .database, "Failed to get remote data", error.localizedDescription)
             return false
         }
     }
@@ -113,9 +113,9 @@ public final class CoreDataStack {
         let zones = try await database.allRecordZones()
         for zone in zones {
             try await database.deleteRecordZone(withID: zone.zoneID)
-            log(.info, "CloudKit Zone with id \(zone.zoneID) is removed")
+            log(.info, .database, "CloudKit Zone with id \(zone.zoneID) is removed")
         }
-        log(.info, "Remove CloudKit", "CloudKit successfully removed")
+        log(.info, .database, "Remove CloudKit", "CloudKit successfully removed")
 
 //        let zone = CKRecordZone.ID(zoneName: "com.apple.coredata.cloudkit.zone")
 //        do {
@@ -136,7 +136,7 @@ public final class CoreDataStack {
                 try self.mainQueueContext.execute(deleteRequest)
                 try self.mainQueueContext.save()
             } catch {
-                log(.error, "Remove CoreData", error.localizedDescription)
+                log(.error, .database, "Remove CoreData", error.localizedDescription)
             }
         }
     }

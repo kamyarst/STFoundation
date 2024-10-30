@@ -5,11 +5,11 @@
 //  Created by Kamyar Sehati on 02/04/2023.
 //
 
+import CloudKit
 import Combine
+import CoreData
 import Network
 import SwiftUI
-import CloudKit
-import CoreData
 
 /// An object, usually used as a singleton, that provides, and publishes, the current state of
 /// `NSPersistentCloudKitContainer`'s sync
@@ -460,20 +460,19 @@ public class SyncMonitor: ObservableObject {
         guard listen else { return }
 
         // Monitor NSPersistentCloudKitContainer sync events
-        if #available(iOS 14.0, macCatalyst 14.0, *) { // Crashes on 13.7 w/o this, even though we have @available
-            NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
-                .sink(receiveValue: { notification in
-                    if let cloudEvent = notification
-                        .userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
-                        as? NSPersistentCloudKitContainer.Event {
-                        let event = SyncEvent(from: cloudEvent) // To make testing possible
-                        // Properties need to be set on the main thread for SwiftUI, so we'll do that here
-                        // instead of maing setProperties run async code, which is inconvenient for testing.
-                        DispatchQueue.main.async { self.setProperties(from: event) }
-                    }
-                })
-                .store(in: &disposables)
-        }
+
+        NotificationCenter.default.publisher(for: NSPersistentCloudKitContainer.eventChangedNotification)
+            .sink(receiveValue: { notification in
+                if let cloudEvent = notification
+                    .userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
+                    as? NSPersistentCloudKitContainer.Event {
+                    let event = SyncEvent(from: cloudEvent) // To make testing possible
+                    // Properties need to be set on the main thread for SwiftUI, so we'll do that here
+                    // instead of maing setProperties run async code, which is inconvenient for testing.
+                    DispatchQueue.main.async { self.setProperties(from: event) }
+                }
+            })
+            .store(in: &self.disposables)
 
         // Update the network status when the OS reports a change. Note that we ignore whether the connection is
         // expensive or not - we just care whether iCloud is _able_ to sync. If there's no network,
@@ -547,7 +546,7 @@ public class SyncMonitor: ObservableObject {
     // MARK: - Processing NSPersistentCloudKitContainer events -
 
     /// Set the appropriate State property (importState, exportState, setupState) based on the provided event
-    internal func setProperties(from event: SyncEvent) {
+    func setProperties(from event: SyncEvent) {
         // First, set the SyncState for the event
         var state: SyncState = .notStarted
         // NSPersistentCloudKitContainer sends a notification when an event starts, and another when it
@@ -579,7 +578,7 @@ public class SyncMonitor: ObservableObject {
     }
 
     /// A sync event containing the values from NSPersistentCloudKitContainer.Event that we track
-    internal struct SyncEvent {
+    struct SyncEvent {
         var type: NSPersistentCloudKitContainer.EventType
         var startDate: Date?
         var endDate: Date?

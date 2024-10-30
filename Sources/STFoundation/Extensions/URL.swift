@@ -9,6 +9,11 @@ import Foundation
 
 public extension URL {
 
+    init?(string: String?) {
+        guard let string, let url = URL(string: string) else { return nil }
+        self = url
+    }
+
     /// Returns a URL for the given app group and database pointing to the sqlite database.
     static func storeURL(for appGroup: String, databaseName: String) -> URL {
         guard let fileContainer = FileManager.default

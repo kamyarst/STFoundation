@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-extension Color {
-    public init(hex: String) {
+public extension Color {
+    init(hex: String) {
         // Remove any leading "#" if present
         var cleanedHex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
 
@@ -34,5 +34,19 @@ extension Color {
 
         // Initialize the SwiftUI Color with the RGB components
         self.init(red: red, green: green, blue: blue)
+    }
+
+    func labelColor() -> Color {
+        // Extract RGB components from the background color
+        let components = self.cgColor?.components
+        let r = components?[0] ?? 0
+        let g = components?[1] ?? 0
+        let b = components?[2] ?? 0
+
+        // Calculate the relative luminance
+        let luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+        // Determine the color of the label based on the luminance
+        return luminance > 0.5 ? .black : .white
     }
 }

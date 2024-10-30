@@ -7,122 +7,148 @@
 
 import Foundation
 
-extension Date {
+public extension Date {
 
-    public var standardServerFormat: String {
+    var standardServerFormat: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         return dateFormatter.string(from: self)
     }
 
-    public var dateString: String {
+    var dateString: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy"
         return dateFormatter.string(from: self)
     }
 
-    public var dayString: String {
+    var dayString: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMM d"
         return dateFormatter.string(from: self)
     }
 
-    public var monthName: String {
+    var monthName: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "MMMM"
         return dateFormatter.string(from: self.dateOnly)
     }
 
-    public var day: String {
+    var day: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "d"
         return dateFormatter.string(from: self.dateOnly)
     }
 
-    public var dayOfWeekText: String {
+    var dayOfWeekText: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "E"
         return dateFormatter.string(from: self.dateOnly)
     }
 
-    public var year: Int { Calendar.current.component(.year, from: self) }
+    var year: Int { Calendar.current.component(.year, from: self) }
 
-    public var month: Int { Calendar.current.component(.month, from: self) }
+    var month: Int { Calendar.current.component(.month, from: self) }
 
-    public var week: Int { Calendar.current.component(.weekOfYear, from: self) }
+    var week: Int { Calendar.current.component(.weekOfYear, from: self) }
 
-    public var minute: Int { Calendar.current.component(.minute, from: self) }
+    var minute: Int { Calendar.current.component(.minute, from: self) }
 
-    public var hour: Int { Calendar.current.component(.hour, from: self) }
+    var hour: Int { Calendar.current.component(.hour, from: self) }
 
-    public var dateOnly: Date {
-        var components = Calendar.current.dateComponents([.year, .month, .day], from: self)
-        components.timeZone = .current
-        let date = Calendar.current.date(from: components)
-        return date ?? Date()
+    var dateOnly: Date {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day], from: self)
+        return calendar.date(from: components)!
     }
 
-    public var dayOfMonth: Int {
+    var dayOfMonth: Int {
         Calendar.current.dateComponents([.day], from: self).day ?? 0
     }
 
-    public var dayOfYear: Int {
+    var dayOfYear: Int {
         Calendar.current.ordinality(of: .day, in: .year, for: self) ?? 0
     }
 
-    public var firstDateOfMonth: Date {
+    var firstDateOfMonth: Date {
         var value = self.dayOfMonth
         value -= 1
-        return self.addDay(days: -value)
+        return self.addDay(-value)
     }
 
-    public var lastDateOfMonth: Date {
-        self.firstDateOfMonth.addMonth(month: 1).addDay(days: -1)
+    var lastDateOfMonth: Date {
+        self.firstDateOfMonth.addMonth(1).addDay(-1)
     }
 
-    public init?(_ string: String, format: String = "yyyy-MM-dd") {
+    var firstDateOfYear: Date {
+        var value = self.dayOfYear
+        value -= 1
+        return self.addDay(-value)
+    }
+
+    var lastDateOfYear: Date {
+        self.firstDateOfYear.addYear(1).addDay(-1)
+    }
+
+    init?(_ string: String, format: String = "yyyy-MM-dd") {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = format
+        dateFormatter.locale = .current
 
         guard let date = dateFormatter.date(from: string) else { return nil }
         self = date
     }
 
-    public func isBetween(lhs: Date, rhs: Date) -> Bool {
+    /// Initializes a Date object from an ISO 8601 formatted string.
+    /// - Parameter iso8601String: The string containing the date in ISO 8601 format.
+    init?(iso8601String: String) {
+        let formatter = ISO8601DateFormatter()
+        // Adjust the formatter to your specific needs. By default, it handles the most common ISO 8601 formats.
+
+        guard let date = formatter.date(from: iso8601String) else { return nil }
+        self = date
+    }
+
+    func isBetween(lhs: Date, rhs: Date) -> Bool {
         lhs <= self && self <= rhs
     }
 
-    public func addDay(days: Int) -> Date {
+    func addDay(_ day: Int) -> Date {
         var dateComponent = DateComponents()
-        dateComponent.day = days
-        return Calendar.current.date(byAdding: dateComponent, to: self)?.dateOnly ?? Date()
+        dateComponent.day = day
+        return Calendar.current.date(byAdding: dateComponent, to: self)!
     }
 
-    public func addMonth(month: Int) -> Date {
+    func addMonth(_ month: Int) -> Date {
         var dateComponent = DateComponents()
         dateComponent.month = month
-        return Calendar.current.date(byAdding: dateComponent, to: self)?.dateOnly ?? Date()
+        return Calendar.current.date(byAdding: dateComponent, to: self)!
     }
 
-    public func addWeek(week: Int) -> Date {
+    func addWeek(_ week: Int) -> Date {
         var dateComponent = DateComponents()
         dateComponent.day = week * 7
-        return Calendar.current.date(byAdding: dateComponent, to: self)?.dateOnly ?? Date()
+        return Calendar.current.date(byAdding: dateComponent, to: self)!
     }
 
-    public func distance(from date: Date) -> Int {
+    func addYear(_ year: Int) -> Date {
+        var dateComponent = DateComponents()
+        dateComponent.year = year
+        return Calendar.current.date(byAdding: dateComponent, to: self)!
+    }
+
+    func distance(from date: Date) -> Int {
         Calendar.current.dateComponents([.day], from: self, to: date).day ?? 1
     }
 
-    public func distanceWeek(from date: Date) -> Int {
+    func distanceWeek(from date: Date) -> Int {
         abs(self.week - date.week) + 1
     }
 
-    public func distanceMonth(from date: Date) -> Int {
+    func distanceMonth(from date: Date) -> Int {
         abs(self.month - date.month) + 1
     }
 
-    public func distanceYear(from date: Date) -> Int {
+    func distanceYear(from date: Date) -> Int {
         abs(self.year - date.year)
     }
 }
