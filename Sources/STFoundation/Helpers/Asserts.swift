@@ -7,10 +7,17 @@
 
 import Foundation
 
-public func assertMainThread() {
-    assert(Thread.current.isMainThread)
+// MARK: - ThreadType
+
+public enum ThreadType {
+    case main
+    case background
 }
 
-public func assertBackgroundThread() {
-    assert(!Thread.current.isMainThread)
+public func assertThread(_ type: ThreadType, file: StaticString = #file, line: UInt = #line) {
+    if type == .main {
+        assert(Thread.current.isMainThread, file: file, line: line)
+    } else {
+        assert(!Thread.current.isMainThread, file: file, line: line)
+    }
 }
