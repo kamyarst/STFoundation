@@ -5,18 +5,19 @@
 //  Created by Kamyar on 27/01/2023.
 //
 
-import Foundation
 import OSLog
+import Foundation
 
 public func log(_ type: LogType, _ category: LogCategory, _ items: Any..., separator: String? = nil,
                 file: String = #fileID, line: Int = #line, function: String = #function) {
-    LogManager().log(items,
-                     category: category,
-                     type: type,
-                     separator: separator ?? type.separator,
-                     file: file,
-                     function: function,
-                     line: line)
+    LogManager().log(
+        items,
+        category: category,
+        type: type,
+        separator: separator ?? type.separator,
+        file: file,
+        function: function,
+        line: line)
 }
 
 // MARK: - LogManager
@@ -57,7 +58,7 @@ private struct LogManager {
         case .request, .response:
             logger.trace("\(message, privacy: .private)")
 
-        case let .custom(logModel):
+        case .custom:
             logger.error("\(message, privacy: .private)")
         }
     }

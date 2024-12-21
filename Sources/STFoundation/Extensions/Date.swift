@@ -9,42 +9,6 @@ import Foundation
 
 public extension Date {
 
-    var standardServerFormat: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        return dateFormatter.string(from: self)
-    }
-
-    var dateString: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy"
-        return dateFormatter.string(from: self)
-    }
-
-    var dayString: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d"
-        return dateFormatter.string(from: self)
-    }
-
-    var monthName: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMM"
-        return dateFormatter.string(from: self.dateOnly)
-    }
-
-    var day: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "d"
-        return dateFormatter.string(from: self.dateOnly)
-    }
-
-    var dayOfWeekText: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "E"
-        return dateFormatter.string(from: self.dateOnly)
-    }
-
     var year: Int { Calendar.current.component(.year, from: self) }
 
     var month: Int { Calendar.current.component(.month, from: self) }
@@ -61,6 +25,10 @@ public extension Date {
         return calendar.date(from: components)!
     }
 
+    var endOfDay: Date {
+        self.dateOnly.addDay(1).addingTimeInterval(-1)
+    }
+
     var dayOfMonth: Int {
         Calendar.current.dateComponents([.day], from: self).day ?? 0
     }
@@ -72,21 +40,21 @@ public extension Date {
     var firstDateOfMonth: Date {
         var value = self.dayOfMonth
         value -= 1
-        return self.addDay(-value)
+        return self.addDay(-value).dateOnly
     }
 
     var lastDateOfMonth: Date {
-        self.firstDateOfMonth.addMonth(1).addDay(-1)
+        self.firstDateOfMonth.addMonth(1).addingTimeInterval(-1)
     }
 
     var firstDateOfYear: Date {
         var value = self.dayOfYear
         value -= 1
-        return self.addDay(-value)
+        return self.addDay(-value).dateOnly
     }
 
     var lastDateOfYear: Date {
-        self.firstDateOfYear.addYear(1).addDay(-1)
+        self.firstDateOfYear.addYear(1).addingTimeInterval(-1)
     }
 
     init?(_ string: String, format: String = "yyyy-MM-dd") {

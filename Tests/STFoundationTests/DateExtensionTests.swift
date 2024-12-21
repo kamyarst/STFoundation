@@ -16,7 +16,8 @@ struct DateExtensionTests {
     private static var mockDate = Date("2024-09-19")!
 
     @Test("Remove time",
-          arguments: [(mockDate, mockDate.addingTimeInterval(100)),
+          arguments: [
+            (mockDate, mockDate.addingTimeInterval(100)),
                       (mockDate.addDay(1), mockDate.addingTimeInterval(86400))])
     func getDateOnly(dates: (Date, Date)) async throws {
         #expect(dates.0 == dates.1.dateOnly)
@@ -59,8 +60,7 @@ struct DateExtensionTests {
     @Test("get first day of month",
           arguments: [MockModel(original: mockDate, expected: Date("2024-09-01")!),
                       MockModel(original: Date("2024-09-01")!, expected: Date("2024-09-01")!),
-                      MockModel(original: Date("2024-09-30")!,
-                                expected: Date("2024-09-01")!)])
+                      MockModel(original: Date("2024-09-30")!, expected: Date("2024-09-01")!)])
     func getFirstDayOfMonth(mock: MockModel) async throws {
         #expect(mock.original.firstDateOfMonth == mock.expected)
     }
@@ -76,7 +76,7 @@ struct DateExtensionTests {
                       MockModel(original: Date("2024-02-29")!, expected: Date("2024-02-29")!),
                       MockModel(original: Date("2024-02-19")!, expected: Date("2024-02-29")!)])
     func getLastDayOfMonth(mock: MockModel) async throws {
-        #expect(mock.original.lastDateOfMonth == mock.expected)
+        #expect(mock.original.lastDateOfMonth == mock.expected.addDay(1).addingTimeInterval(-1))
     }
 
     @Test("get first day of year",
@@ -92,7 +92,7 @@ struct DateExtensionTests {
                       MockModel(original: Date("2024-01-01")!, expected: Date("2024-12-31")!),
                       MockModel(original: Date("2024-12-31")!, expected: Date("2024-12-31")!)])
     func getLastDayOfYear(mock: MockModel) async throws {
-        #expect(mock.original.lastDateOfYear == mock.expected)
+        #expect(mock.original.lastDateOfYear == mock.expected.addDay(1).addingTimeInterval(-1))
     }
 }
 
