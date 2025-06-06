@@ -22,13 +22,14 @@ public class TaskManager {
         let uuid = UUID()
         self.tasks[uuid] = Task.detached {
             do {
+                log(.info, .logic, "Starting task with UUID: \(uuid)")
                 try await task()
                 // If the task completes, we remove it from our dictionary
-                self.tasks.removeValue(forKey: uuid)
             } catch {
                 log(.error, .none, error)
-                self.tasks.removeValue(forKey: uuid)
             }
+            self.tasks.removeValue(forKey: uuid)
+            log(.info, .logic, "Finished task with UUID: \(uuid)")
         }
         return uuid
     }
