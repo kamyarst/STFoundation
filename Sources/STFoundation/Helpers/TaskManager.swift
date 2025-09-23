@@ -18,7 +18,7 @@ public class TaskManager {
     private init() { }
 
     @discardableResult
-    public func startTask(_ task: @escaping () async throws -> Void) -> UUID {
+    public func startTask(_ task: @escaping () async throws -> Void, completion: (() async -> Void)? = nil) -> UUID {
         let uuid = UUID()
         self.tasks[uuid] = Task.detached {
             do {
@@ -28,6 +28,7 @@ public class TaskManager {
             } catch {
                 log(.error, .none, error)
             }
+            await completion?()
             self.tasks.removeValue(forKey: uuid)
             log(.info, .logic, "Finished task with UUID: \(uuid)")
         }
