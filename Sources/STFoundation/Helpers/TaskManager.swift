@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class TaskManager {
+public actor TaskManager: Sendable {
     public static let shared = TaskManager()
     private var tasks: [UUID: Task<Void, Never>] = [:]
 
@@ -18,9 +18,9 @@ public class TaskManager {
     private init() { }
 
     @discardableResult
-    public func startTask(_ task: @escaping () async throws -> Void, completion: (() async -> Void)? = nil) -> UUID {
+    public func startTask(_ task: @escaping @Sendable () async throws -> Void, completion: (@Sendable () async -> Void)? = nil) -> UUID {
         let uuid = UUID()
-        self.tasks[uuid] = Task.detached {
+        let taskInstance = Task.detached { [weak self] in
             do {
                 log(.info, .logic, "Starting task with UUID: \(uuid)")
                 try await task()
@@ -29,10 +29,16 @@ public class TaskManager {
                 log(.error, .none, error)
             }
             await completion?()
-            self.tasks.removeValue(forKey: uuid)
+            await self?.removeTask(uuid: uuid)
             log(.info, .logic, "Finished task with UUID: \(uuid)")
         }
+        
+        self.tasks[uuid] = taskInstance
         return uuid
+    }
+    
+    private func removeTask(uuid: UUID) {
+        self.tasks.removeValue(forKey: uuid)
     }
 
     public func cancelTask(with uuid: UUID) {

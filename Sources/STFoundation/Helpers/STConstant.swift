@@ -10,17 +10,17 @@ import SwiftUI
 public enum STConstant {
     public enum Margin {
         /// 4
-        public static var verySmall: CGFloat = 4
+        public static let verySmall: CGFloat = 4
         /// 8
-        public static var small: CGFloat = 8
+        public static let small: CGFloat = 8
         /// 12
-        public static var medium: CGFloat = 12
+        public static let medium: CGFloat = 12
         /// 16
-        public static var standard: CGFloat = 16
+        public static let standard: CGFloat = 16
         /// 20
-        public static var big: CGFloat = 20
+        public static let big: CGFloat = 20
         /// 24
-        public static var veryBig: CGFloat = 24
+        public static let veryBig: CGFloat = 24
     }
 
     public enum Radius {
@@ -51,15 +51,15 @@ public enum STConstant {
     static let maxBorderWidth: CGFloat = 3
     #if canImport(UIKit)
         /// screenWidth * 0.8
-        static let maxButtonWidth: CGFloat = screenWidth * 0.8
+        @MainActor static let maxButtonWidth: CGFloat = screenWidth * 0.8
         /// screenWidth * 0.65
-        static let standardButtonWidth: CGFloat = screenWidth * 0.65
+        @MainActor static let standardButtonWidth: CGFloat = screenWidth * 0.65
         /// screenWidth * 0.5
-        static let minButtonWidth: CGFloat = screenWidth * 0.5
+        @MainActor static let minButtonWidth: CGFloat = screenWidth * 0.5
 
         /// Screen Width
-        public static let screenWidth: CGFloat = UIScreen.main.bounds.width
+        @MainActor public static let screenWidth: CGFloat = UIScreen.main.bounds.width
         /// Screen Height
-        public static let screenHeight: CGFloat = UIScreen.main.bounds.height
+        @MainActor public static let screenHeight: CGFloat = UIScreen.main.bounds.height
     #endif
 }

@@ -154,7 +154,7 @@ public final class CoreDataStack {
         })
 
         container.viewContext.automaticallyMergesChangesFromParent = true
-        container.viewContext.mergePolicy = NSMergeByPropertyStoreTrumpMergePolicy
+        container.viewContext.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
 
         return container
     }

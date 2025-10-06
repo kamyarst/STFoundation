@@ -7,8 +7,8 @@
 
 import Foundation
 
-public extension Sequence {
-    func asyncCompactMap<T>(_ transform: @escaping (Element) async throws -> T?) async rethrows -> [T] {
+public extension Sequence where Element: Sendable {
+    func asyncCompactMap<T: Sendable>(_ transform: @escaping @Sendable (Element) async throws -> T?) async rethrows -> [T] {
         await withTaskGroup(of: (Element, T?).self,
                             returning: [T].self) { group in
             for element in self {
